@@ -1,0 +1,84 @@
+/* ── Token warna (tema terang) ── */
+:root {
+  --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+  --side: #0f172a; --side-hover: #1e293b; --accent: #0284c7; --row-alt: #f8fafc;
+  --out: #d97706; --in: #059669; --rej: #e11d48; --tag: #9333ea;
+}
+/* ── Tema gelap ── */
+[data-theme="dark"] {
+  --bg: #0b1220; --card: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --border: #334155;
+  --accent: #38bdf8; --row-alt: #172033;
+  --out: #fbbf24; --in: #34d399; --rej: #fb7185; --tag: #c084fc;
+}
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); transition: background .2s, color .2s; }
+.lbl { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 2px; display: block; }
+.btn-accent { background: var(--accent); color: #fff; border: 0; }
+.btn-accent:hover { filter: brightness(.92); color: #fff; }
+.btn-dark-outline { color: #cbd5e1; border: 1px solid #334155; background: #1e293b; }
+.btn-dark-outline:hover { color: #fff; background: #334155; }
+.fw-black { font-weight: 800; }
+
+/* ── Kerangka ── */
+.topbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 1030; background: var(--side); color: #fff;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid #1e293b; }
+.brand-sub { font-size: 10px; color: #38bdf8; letter-spacing: .05em; }
+.logo-box { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  background: #0ea5e9; color: #0f172a; font-weight: 800; border-radius: 8px; }
+.sidebar { position: fixed; top: 56px; bottom: 0; left: 0; width: 256px; z-index: 1020; background: var(--side); color: #cbd5e1;
+  padding: 16px; overflow-y: auto; transform: translateX(-100%); transition: transform .25s; }
+.sidebar.open { transform: none; }
+.side-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; padding: 0 8px 8px; }
+.side-foot { margin-top: 24px; padding: 12px 8px 0; border-top: 1px solid #1e293b; font-size: 11px; color: #64748b; }
+.nav-x { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; margin-bottom: 4px; border: 0;
+  border-radius: 8px; background: none; color: #94a3b8; font-size: 14px; font-weight: 500; text-align: left; }
+.nav-x i { width: 20px; text-align: center; }
+.nav-x:hover { background: var(--side-hover); color: #fff; }
+.nav-x.active { background: #0284c7; color: #fff; }
+.content { padding: 72px 16px 24px; }
+@media (min-width: 768px) {
+  .sidebar { transform: none; }
+  .content { margin-left: 256px; padding: 72px 24px 24px; }
+}
+
+/* ── Kartu & tabel ── */
+.card-x { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.border-bottom-x { border-bottom: 1px solid var(--border); }
+.table-x { --bs-table-bg: transparent; --bs-table-color: var(--text); --bs-table-border-color: var(--border); font-size: 12px; }
+.table-x thead th { font-size: 11px; text-transform: uppercase; color: var(--muted); background: var(--row-alt); white-space: nowrap; }
+.table-x td { vertical-align: middle; }
+.tx-out { color: var(--out); font-weight: 700; } .tx-in { color: var(--in); font-weight: 700; }
+.tx-rej { color: var(--rej); font-weight: 700; } .tx-tag { color: var(--accent); font-weight: 700; }
+
+/* ── KPI ── */
+.kpi { padding: 16px; height: 100%; }
+.kpi .kpi-h { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.kpi .kpi-v { font-size: 24px; font-weight: 800; margin-top: 6px; }
+.kpi .kpi-s { font-size: 11px; color: var(--muted); }
+.kpi .kpi-l { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); max-height: 96px; overflow-y: auto; font-size: 11px; }
+.kpi-l div { display: flex; justify-content: space-between; padding: 1px 0; }
+.day-card { padding: 14px; text-align: center; }
+.day-card.idle { opacity: .55; }
+.day-card .dn { font-weight: 700; margin-bottom: 8px; }
+.day-card .dg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-size: 11px; color: var(--muted); }
+.day-card .dg b { display: block; font-size: 18px; }
+.day-card .dt { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-weight: 800; color: var(--tag); }
+
+/* ── Login, loading, toast ── */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+#loading-overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(15,23,42,.35); display: flex; align-items: center; justify-content: center; }
+#loading-overlay.d-none { display: none !important; }
+#toast-container { position: fixed; top: 64px; right: 16px; z-index: 2100; display: flex; flex-direction: column; gap: 8px; }
+.toast-item { padding: 10px 16px; border-radius: 10px; color: #fff; font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.toast-success { background: #059669; } .toast-danger { background: #e11d48; } .toast-info { background: #0284c7; }
+
+/* ── Invoice: tampilan kertas (selalu terang) ── */
+.paper { background: #fff; color: #000; border: 1px solid var(--border); border-radius: 12px; max-width: 900px; margin-inline: auto;
+  --bs-body-color: #000; --bs-body-bg: #fff; --bs-border-color: #ccc; --bs-table-color: #000; --bs-table-bg: #fff; --bs-table-border-color: #ccc; }
+.paper .text-muted { color: #555 !important; }
+.paper .ttd { display: inline-block; border-top: 1px solid #999; padding: 4px 32px 0; }
+@media print {
+  body * { visibility: hidden; }
+  #invoice-print-area, #invoice-print-area * { visibility: visible; }
+  #invoice-print-area { position: absolute; left: 0; top: 0; width: 100%; border: 0; box-shadow: none; }
+  .no-print { display: none !important; }
+}
