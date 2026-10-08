@@ -14,8 +14,10 @@ const num = n => Number(n || 0).toLocaleString('id-ID');
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 const nowJam = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const tglID = s => s ? s.split('-').reverse().join('/') : '';
-const waktuID = (t, j) => `${(j || '00:00').slice(0, 5)} ${tglID(t)}`;              // 13:50 25/09/2026
 const hariTgl = s => new Date(s + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long' }) + ', ' + tglID(s); // Selasa, 29/09/2026
+const waktuID = (t, j) => `${(j || '00:00').slice(0, 5)} ${hariTgl(t)}`;           // 10:30 Kamis, 08/10/2026
+// Warna baris per tanggal: berdasarkan nomor hari, jadi tanggal berurutan selalu beda warna
+const dayClass = s => Math.floor(Date.parse(s + 'T00:00:00Z') / 86400000) % 8;
 const ketLabel = k => ({ proses_ulang: 'Proses Ulang', kembali_gudang: 'Kembali ke Gudang' }[k] || '-');
 const showLoading = () => $('loading-overlay').classList.remove('d-none');
 const hideLoading = () => $('loading-overlay').classList.add('d-none');
@@ -78,6 +80,7 @@ sb.auth.onAuthStateChange((event, session) => {
 
 async function startApp() {
   $('d-hariini').value = todayStr();
+  const [w1, w2] = weekRange(); $('d-dari').value = w1; $('d-sampai').value = w2; // dasbor default: minggu ini
   await loadMaster();
   navigateTo('dashboard');
 }
@@ -102,6 +105,7 @@ function fillVendorSelects() {
 function applyConfig() {
   $('brand-name').textContent = cfg.nama_bengkel || '3 WARNA TEKNIK';
   $('iv-nama').textContent = cfg.nama_bengkel || ''; $('iv-sub').textContent = cfg.subjudul || ''; $('iv-alamat').textContent = cfg.alamat || '';
+  applyLogo();
   $('cf-nama').value = cfg.nama_bengkel || ''; $('cf-sub').value = cfg.subjudul || ''; $('cf-alamat').value = cfg.alamat || '';
 }
 
@@ -132,7 +136,15 @@ $('kpi-row').innerHTML = KPI.map(k => `<div class="col-6 col-lg"><div class="car
   <div class="kpi-h" style="color:${k[2]}"><span>${k[1]}</span><i class="fa-solid ${k[3]}"></i></div>
   <div class="kpi-v" id="k-${k[0]}">0</div><div class="kpi-s">${k[4]}</div><div class="kpi-l" id="l-${k[0]}"></div></div></div>`).join('');
 
-function resetDash() { $('d-vendor').value = ''; $('d-dari').value = ''; $('d-sampai').value = ''; loadDashboard(); }
+// Minggu ini = Senin s/d Minggu
+function weekRange() {
+  const d = new Date(), s = new Date(d); s.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  const e = new Date(s); e.setDate(s.getDate() + 6);
+  const f = x => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
+  return [f(s), f(e)];
+}
+function setMingguIni() { const [a, b] = weekRange(); $('d-vendor').value = ''; $('d-dari').value = a; $('d-sampai').value = b; loadDashboard(); }
+function setSemuaWaktu() { $('d-vendor').value = ''; $('d-dari').value = ''; $('d-sampai').value = ''; loadDashboard(); }
 
 async function loadDashboard() {
   const r = await call(sb.rpc('dashboard_per_item', {
@@ -208,7 +220,7 @@ async function loadRiwayat(p = 0) {
   $('rw-count').textContent = r.count ?? r.data.length;
   $('rw-body').innerHTML = r.data.length ? r.data.map(t => {
     const lock = !!t.invoice_id;
-    return `<tr>
+    return `<tr class="dc-${dayClass(t.tanggal)}">
       <td class="fw-semibold text-nowrap">${waktuID(t.tanggal, t.jam)}</td><td>${esc(t.vendors?.nama)}</td><td>${esc(t.catalog_items?.nama)}</td>
       <td class="text-center tx-out">${t.qty_out}</td><td class="text-center tx-in">${t.qty_in}</td><td class="text-center tx-rej">${t.qty_reject}</td>
       <td>${ketLabel(t.reject_action)}</td><td class="text-end">${rp(t.harga)}</td><td class="text-end tx-tag">${rp(t.qty_in * t.harga)}</td>
@@ -414,4 +426,36 @@ async function saveConfig(e) {
   const rows = [{ key: 'nama_bengkel', value: $('cf-nama').value }, { key: 'subjudul', value: $('cf-sub').value }, { key: 'alamat', value: $('cf-alamat').value }];
   const r = await call(sb.from('app_config').upsert(rows, { onConflict: 'key' }), 'Pengaturan tersimpan.');
   if (r.ok) { rows.forEach(x => cfg[x.key] = x.value); applyConfig(); }
+}
+
+// ── Logo (Supabase Storage, bucket "logo") ──
+function applyLogo() {
+  const u = cfg.logo_url, box = $('brand-logo');
+  box.classList.toggle('has-img', !!u);
+  box.innerHTML = u ? `<img class="logo-img" src="${esc(u)}" alt="Logo" />` : '3W';
+  const iv = $('iv-logo'); iv.classList.toggle('d-none', !u); if (u) iv.src = u; else iv.removeAttribute('src');
+  const pv = $('cf-logo-prev'); pv.classList.toggle('d-none', !u); $('cf-logo-empty').classList.toggle('d-none', !!u); if (u) pv.src = u; else pv.removeAttribute('src');
+}
+async function uploadLogo() {
+  const f = $('cf-logo-file').files[0];
+  if (!f) return toast('Pilih file logo dulu.', 'danger');
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(f.type)) return toast('Format harus PNG, JPG, atau WEBP.', 'danger');
+  if (f.size > 1048576) return toast('Ukuran logo maksimal 1 MB.', 'danger');
+  const path = `logo-${Date.now()}.${f.type.split('/')[1].replace('jpeg', 'jpg')}`;
+  const up = await call(sb.storage.from('logo').upload(path, f, { contentType: f.type }));
+  if (!up.ok) return;
+  const url = sb.storage.from('logo').getPublicUrl(path).data.publicUrl;
+  const oldPath = cfg.logo_path;
+  const r = await call(sb.from('app_config').upsert([{ key: 'logo_url', value: url }, { key: 'logo_path', value: path }], { onConflict: 'key' }), 'Logo diperbarui.');
+  if (!r.ok) return;
+  cfg.logo_url = url; cfg.logo_path = path; applyLogo(); $('cf-logo-file').value = '';
+  if (oldPath) sb.storage.from('logo').remove([oldPath]); // bersihkan file lama
+}
+async function hapusLogo() {
+  if (!cfg.logo_url || !confirm('Hapus logo dan kembali ke logo "3W"?')) return;
+  const oldPath = cfg.logo_path;
+  const r = await call(sb.from('app_config').delete().in('key', ['logo_url', 'logo_path']), 'Logo dihapus.');
+  if (!r.ok) return;
+  delete cfg.logo_url; delete cfg.logo_path; applyLogo();
+  if (oldPath) sb.storage.from('logo').remove([oldPath]);
 }
