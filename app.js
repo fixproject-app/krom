@@ -286,7 +286,7 @@ async function loadTransaksi() {
   const v = $('tr-vendor').value, d = $('tr-dari').value, s = $('tr-sampai').value;
   if (v) qb = qb.eq('vendor_id', v); if (d) qb = qb.gte('tanggal', d); if (s) qb = qb.lte('tanggal', s);
   const r = await call(qb.limit(500)); if (!r.ok) return;
-  $('tr-body').innerHTML = r.data.length ? r.data.map(x => `<tr>
+  $('tr-body').innerHTML = r.data.length ? r.data.map(x => `<tr class="dc-${dayClass(x.tanggal)}">
     <td class="fw-semibold text-nowrap">${hariTgl(x.tanggal)}</td><td>${esc(x.vendor)}</td><td>${esc(x.item)}${x.invoice_id ? ' <i class="fa-solid fa-lock text-muted" title="Sudah ditagihkan"></i>' : ''}</td>
     <td class="text-center tx-out">${x.qty_out}</td><td class="text-center tx-in">${x.qty_in}</td><td class="text-center tx-rej">${x.qty_reject}</td>
     <td class="text-end">${rp(x.ongkos || 0)}</td><td class="text-end tx-tag">${rp(x.total)}</td></tr>`).join('')
