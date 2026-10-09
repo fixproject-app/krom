@@ -237,10 +237,16 @@ function fillItemSelect(currentId) {
   $('tx-item').innerHTML = '<option value="">-- Pilih Produk --</option>' + items.filter(i => i.aktif || i.id === currentId)
     .map(i => `<option value="${i.id}" data-tarif="${i.tarif}">${esc(i.nama)} (${rp(i.tarif)})</option>`).join('');
 }
-function onItemChange() {
-  const o = $('tx-item').selectedOptions[0];
-  if (o && o.dataset.tarif) $('tx-harga').value = o.dataset.tarif;
+// Ongkos otomatis dari katalog; tidak menimpa angka yang sudah diketik manual (kecuali masih 0)
+let hargaManual = false;
+$('tx-harga').addEventListener('input', () => { hargaManual = true; });
+const tarifItem = () => Number($('tx-item').selectedOptions[0]?.dataset.tarif || 0);
+function fillTarif(force) {
+  const t = tarifItem();
+  if (t > 0 && (force || !hargaManual || !(+$('tx-harga').value))) $('tx-harga').value = t;
 }
+function onItemChange() { fillTarif(false); }
+function syncHarga() { if ((+$('tx-in').value || 0) > 0) fillTarif(false); } // saat Jadi (In) diisi
 async function openTx(id) {
   $('tx-id').value = id || '';
   $('tx-title').textContent = id ? 'Edit Transaksi' : 'Input Transaksi Baru';
@@ -252,6 +258,7 @@ async function openTx(id) {
   if (t) { $('tx-vendor').value = t.vendor_id; $('tx-item').value = t.item_id; }
   $('tx-out').value = t?.qty_out ?? 0; $('tx-in').value = t?.qty_in ?? 0; $('tx-rej').value = t?.qty_reject ?? 0;
   $('tx-ket').value = t?.reject_action || ''; $('tx-harga').value = t?.harga ?? 0;
+  hargaManual = !!(t && t.harga > 0);
   mTx().show();
 }
 async function saveTx(e) {
@@ -263,6 +270,7 @@ async function saveTx(e) {
   };
   o.reject_action = o.qty_reject > 0 ? ($('tx-ket').value || null) : null;
   o.harga = o.qty_in > 0 ? (+$('tx-harga').value || 0) : 0; // ongkos hanya berlaku untuk barang Jadi
+  if (o.qty_in > 0 && o.harga === 0 && tarifItem() > 0) o.harga = tarifItem(); // cadangan: ambil tarif katalog
   if (o.qty_out + o.qty_in + o.qty_reject === 0) return toast('Isi minimal satu jumlah.', 'danger');
   if (o.qty_reject > 0 && !o.reject_action) return toast('Pilih keterangan reject.', 'danger');
   if (o.qty_in > 0 && o.harga === 0 && !confirm('Ongkos 0 untuk barang Jadi. Lanjutkan?')) return;
