@@ -210,7 +210,7 @@
     <div class="col-6"><label class="lbl">Vendor</label><select id="tx-vendor" class="form-select" required></select></div>
     <div class="col-6"><label class="lbl">Produk</label><select id="tx-item" class="form-select" required onchange="onItemChange()"></select></div>
     <div class="col-4"><label class="lbl" style="color:var(--out)">Mentah (Out)</label><input type="number" min="0" id="tx-out" class="form-control" value="0" /></div>
-    <div class="col-4"><label class="lbl" style="color:var(--in)">Jadi (In)</label><input type="number" min="0" id="tx-in" class="form-control" value="0" /></div>
+    <div class="col-4"><label class="lbl" style="color:var(--in)">Jadi (In)</label><input type="number" min="0" id="tx-in" class="form-control" value="0" oninput="syncHarga()" /></div>
     <div class="col-4"><label class="lbl" style="color:var(--rej)">Reject</label><input type="number" min="0" id="tx-rej" class="form-control" value="0" /></div>
     <div class="col-6"><label class="lbl">Keterangan Reject</label><select id="tx-ket" class="form-select">
       <option value="">- Tidak Ada Reject -</option><option value="proses_ulang">Proses Ulang</option><option value="kembali_gudang">Tidak Diproses Ulang (Kembali ke Gudang)</option></select></div>
